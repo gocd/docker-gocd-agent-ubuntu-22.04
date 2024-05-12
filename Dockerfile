@@ -1,4 +1,4 @@
-# Copyright 2023 Thoughtworks, Inc.
+# Copyright 2024 Thoughtworks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,31 +21,31 @@ FROM curlimages/curl:latest as gocd-agent-unzip
 USER root
 ARG TARGETARCH
 ARG UID=1000
-RUN curl --fail --location --silent --show-error "https://download.gocd.org/binaries/23.5.0-18179/generic/go-agent-23.5.0-18179.zip" > /tmp/go-agent-23.5.0-18179.zip && \
-    unzip -q /tmp/go-agent-23.5.0-18179.zip -d / && \
+RUN curl --fail --location --silent --show-error "https://download.gocd.org/binaries/24.1.0-18867/generic/go-agent-24.1.0-18867.zip" > /tmp/go-agent-24.1.0-18867.zip && \
+    unzip -q /tmp/go-agent-24.1.0-18867.zip -d / && \
     mkdir -p /go-agent/wrapper /go-agent/bin && \
-    mv -v /go-agent-23.5.0/LICENSE /go-agent/LICENSE && \
-    mv -v /go-agent-23.5.0/*.md /go-agent && \
-    mv -v /go-agent-23.5.0/bin/go-agent /go-agent/bin/go-agent && \
-    mv -v /go-agent-23.5.0/lib /go-agent/lib && \
-    mv -v /go-agent-23.5.0/logs /go-agent/logs && \
-    mv -v /go-agent-23.5.0/run /go-agent/run && \
-    mv -v /go-agent-23.5.0/wrapper-config /go-agent/wrapper-config && \
+    mv -v /go-agent-24.1.0/LICENSE /go-agent/LICENSE && \
+    mv -v /go-agent-24.1.0/*.md /go-agent && \
+    mv -v /go-agent-24.1.0/bin/go-agent /go-agent/bin/go-agent && \
+    mv -v /go-agent-24.1.0/lib /go-agent/lib && \
+    mv -v /go-agent-24.1.0/logs /go-agent/logs && \
+    mv -v /go-agent-24.1.0/run /go-agent/run && \
+    mv -v /go-agent-24.1.0/wrapper-config /go-agent/wrapper-config && \
     WRAPPERARCH=$(if [ $TARGETARCH == amd64 ]; then echo x86-64; elif [ $TARGETARCH == arm64 ]; then echo arm-64; else echo $TARGETARCH is unknown!; exit 1; fi) && \
-    mv -v /go-agent-23.5.0/wrapper/wrapper-linux-$WRAPPERARCH* /go-agent/wrapper/ && \
-    mv -v /go-agent-23.5.0/wrapper/libwrapper-linux-$WRAPPERARCH* /go-agent/wrapper/ && \
-    mv -v /go-agent-23.5.0/wrapper/wrapper.jar /go-agent/wrapper/ && \
+    mv -v /go-agent-24.1.0/wrapper/wrapper-linux-$WRAPPERARCH* /go-agent/wrapper/ && \
+    mv -v /go-agent-24.1.0/wrapper/libwrapper-linux-$WRAPPERARCH* /go-agent/wrapper/ && \
+    mv -v /go-agent-24.1.0/wrapper/wrapper.jar /go-agent/wrapper/ && \
     chown -R ${UID}:0 /go-agent && chmod -R g=u /go-agent
 
 FROM docker.io/ubuntu:jammy
 ARG TARGETARCH
 
-LABEL gocd.version="23.5.0" \
+LABEL gocd.version="24.1.0" \
   description="GoCD agent based on docker.io/ubuntu:jammy" \
   maintainer="GoCD Team <go-cd-dev@googlegroups.com>" \
   url="https://www.gocd.org" \
-  gocd.full.version="23.5.0-18179" \
-  gocd.git.sha="7702b283accd1f90f014f0087aa2e9bd8baf4a97"
+  gocd.full.version="24.1.0-18867" \
+  gocd.git.sha="a60529cdf34a96de310bc05e2041f2ac23014707"
 
 ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini-static-${TARGETARCH} /usr/local/sbin/tini
 
@@ -63,12 +63,13 @@ RUN \
   DEBIAN_FRONTEND=noninteractive apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
+  (userdel --remove --force ubuntu || true) && \
   useradd -l -u ${UID} -g root -d /home/go -m go && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y git-core openssh-client bash unzip curl ca-certificates locales procps coreutils && \
   DEBIAN_FRONTEND=noninteractive apt-get clean all && \
   rm -rf /var/lib/apt/lists/* && \
   echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen && /usr/sbin/locale-gen && \
-  curl --fail --location --silent --show-error "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jre_$(uname -m | sed -e s/86_//g)_linux_hotspot_17.0.9_9.tar.gz" --output /tmp/jre.tar.gz && \
+  curl --fail --location --silent --show-error "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jre_$(uname -m | sed -e s/86_//g)_linux_hotspot_17.0.11_9.tar.gz" --output /tmp/jre.tar.gz && \
   mkdir -p /gocd-jre && \
   tar -xf /tmp/jre.tar.gz -C /gocd-jre --strip 1 && \
   rm -rf /tmp/jre.tar.gz && \
